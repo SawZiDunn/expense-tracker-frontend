@@ -19,55 +19,74 @@ export default function FilterBar() {
         setStartDate(start);
         setEndDate(end);
         dispatch(setFilter({ startDate: start, endDate: end }));
+
+        // Create dates at start of day (00:00:00) and end of day (23:59:59)
+        const startDate = new Date(start + "T00:00:00");
+        const endDate = new Date(end + "T23:59:59");
+
         await dispatch(
             fetchExpensesByDateRange({
-                start: new Date(start).toISOString(),
-                end: new Date(end).toISOString(),
+                start: startDate.toISOString(),
+                end: endDate.toISOString(),
             })
         );
         await dispatch(
             fetchCategorySummaryByDateRange({
-                start: new Date(start).toISOString(),
-                end: new Date(end).toISOString(),
+                start: startDate.toISOString(),
+                end: endDate.toISOString(),
             })
         );
     };
 
     const handlePresetPeriod = (period: string) => {
         const now = new Date();
-        const today = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate()
-        );
-        let start: Date;
-        let end: Date = today;
+        // Get local date string (YYYY-MM-DD)
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const todayStr = `${year}-${month}-${day}`;
+
+        let startStr: string;
+        let endStr: string = todayStr;
 
         switch (period) {
             case "today":
-                start = today;
+                startStr = todayStr;
                 break;
-            case "yesterday":
-                start = new Date(today);
-                start.setDate(start.getDate() - 1);
-                end = start;
+            case "yesterday": {
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const y = yesterday.getFullYear();
+                const m = String(yesterday.getMonth() + 1).padStart(2, "0");
+                const d = String(yesterday.getDate()).padStart(2, "0");
+                startStr = `${y}-${m}-${d}`;
+                endStr = startStr;
                 break;
-            case "lastWeek":
-                // Last 7 days until today
-                start = new Date(today);
-                start.setDate(start.getDate() - 6);
+            }
+            case "lastWeek": {
+                // Last 7 days including today (6 days ago to today)
+                const lastWeek = new Date(now);
+                lastWeek.setDate(lastWeek.getDate() - 6);
+                const y = lastWeek.getFullYear();
+                const m = String(lastWeek.getMonth() + 1).padStart(2, "0");
+                const d = String(lastWeek.getDate()).padStart(2, "0");
+                startStr = `${y}-${m}-${d}`;
                 break;
-            case "lastMonth":
-                // Last 30 days until today
-                start = new Date(today);
-                start.setDate(start.getDate() - 29);
+            }
+            case "lastMonth": {
+                // Last 30 days including today (29 days ago to today)
+                const lastMonth = new Date(now);
+                lastMonth.setDate(lastMonth.getDate() - 29);
+                const y = lastMonth.getFullYear();
+                const m = String(lastMonth.getMonth() + 1).padStart(2, "0");
+                const d = String(lastMonth.getDate()).padStart(2, "0");
+                startStr = `${y}-${m}-${d}`;
                 break;
+            }
             default:
                 return;
         }
 
-        const startStr = start.toISOString().split("T")[0];
-        const endStr = end.toISOString().split("T")[0];
         applyDateRange(startStr, endStr);
     };
 
