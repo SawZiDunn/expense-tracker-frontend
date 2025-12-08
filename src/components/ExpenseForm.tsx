@@ -11,10 +11,8 @@ interface ExpenseFormProps {
 const categories = [
     "Food",
     "Transport",
-    "Entertainment",
     "Shopping",
     "Bills",
-    "Healthcare",
     "Education",
     "Other",
 ];
