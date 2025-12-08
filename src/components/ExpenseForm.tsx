@@ -19,6 +19,7 @@ const categories = [
 
 export default function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
     const dispatch = useAppDispatch();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         amount: expense?.amount.toString() || "",
         category: expense?.category || "Food",
@@ -30,30 +31,35 @@ export default function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        const expenseData = {
-            amount: parseFloat(formData.amount),
-            category: formData.category,
-            date: new Date(formData.date).toISOString(),
-            note: formData.note,
-        };
+        try {
+            const expenseData = {
+                amount: parseFloat(formData.amount),
+                category: formData.category,
+                date: new Date(formData.date).toISOString(),
+                note: formData.note,
+            };
 
-        if (expense) {
-            await dispatch(
-                updateExpense({ id: expense.id, expense: expenseData })
-            );
-        } else {
-            await dispatch(createExpense(expenseData));
+            if (expense) {
+                await dispatch(
+                    updateExpense({ id: expense.id, expense: expenseData })
+                );
+            } else {
+                await dispatch(createExpense(expenseData));
+            }
+
+            setFormData({
+                amount: "",
+                category: "Food",
+                date: new Date().toISOString().split("T")[0],
+                note: "",
+            });
+
+            onClose?.();
+        } finally {
+            setIsSubmitting(false);
         }
-
-        setFormData({
-            amount: "",
-            category: "Food",
-            date: new Date().toISOString().split("T")[0],
-            note: "",
-        });
-
-        onClose?.();
     };
 
     return (
@@ -137,15 +143,43 @@ export default function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
                 <div className="flex gap-2">
                     <button
                         type="submit"
-                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                        disabled={isSubmitting}
+                        className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {expense ? "Update" : "Add"} Expense
+                        {isSubmitting ? (
+                            <>
+                                <svg
+                                    className="animate-spin h-5 w-5"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle
+                                        className="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path
+                                        className="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                {expense ? "Updating..." : "Adding..."}
+                            </>
+                        ) : (
+                            <>{expense ? "Update" : "Add"} Expense</>
+                        )}
                     </button>
                     {onClose && (
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                            disabled={isSubmitting}
+                            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Cancel
                         </button>
