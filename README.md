@@ -1,6 +1,6 @@
 # Expense Tracker Frontend
 
-**React + JavaScript + Vite + Tailwind CSS + Redux Toolkit** application for tracking expenses.
+**React + Typescript + Vite + Tailwind CSS + Redux Toolkit** application for tracking expenses.
 
 ## Features Overview
 
@@ -13,14 +13,25 @@
 ### Expense Management
 
 -   Create new expenses with amount, category, date, and note
--   Edit existing expenses inline
+-   Edit existing expenses
 -   Delete expenses with confirmation
 
 ### Filtering
 
 -   Filter expenses by date range
 -   Clear filters to view all expenses
+-   Quick Filter buttons (Today, This Week, This Month)
 -   Summary updates based on filters
+
+## Tech Stack
+
+-   **React 18** - UI library
+-   **TypeScript** - Type safety
+-   **Vite** - Build tool
+-   **Tailwind CSS** - Styling
+-   **Redux Toolkit** - State management
+-   **Axios** - HTTP client
+-   **date-fns** - Date formatting
 
 ## Prerequisites
 
@@ -66,19 +77,9 @@
 
 -   `VITE_API_URL` - Base URL for the backend API (e.g. `http://localhost:5000`)
 
-## Tech Stack
-
--   **React 18** - UI library
--   **TypeScript** - Type safety
--   **Vite** - Build tool
--   **Tailwind CSS** - Styling
--   **Redux Toolkit** - State management
--   **Axios** - HTTP client
--   **date-fns** - Date formatting
-
 ## API Integration
 
-The frontend connects to the backend API at `http://localhost:5000` with the following endpoints:
+The frontend connects to the **C# .NET backend server** using the base URL defined in the environment variable `VITE_API_URL` with the following endpoints:
 
 -   `GET /expenses` - Fetch all expenses
 -   `POST /expenses` - Create new expense
