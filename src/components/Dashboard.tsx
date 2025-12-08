@@ -27,18 +27,29 @@ export default function Dashboard() {
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Dashboard</h2>
+            <h2 className="text-2xl font-bold mb-6 text-gray-800">
+                Summary Dashboard
+            </h2>
 
-            {/* Total Expenses */}
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 mb-6 text-white">
-                <p className="text-sm opacity-90 mb-1">Total Expenses</p>
-                <p className="text-4xl font-bold">
-                    ${totalExpenses.toFixed(2)}
-                </p>
-                <p className="text-sm opacity-90 mt-2">
-                    {expenses.length} transaction
-                    {expenses.length !== 1 ? "s" : ""}
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                {/* Total Expenses */}
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white md:col-span-2">
+                    <p className="text-sm opacity-90 mb-1">Total Expenses</p>
+                    <p className="text-4xl font-bold">
+                        ${totalExpenses.toFixed(2)}
+                    </p>
+                    <p className="text-sm opacity-90 mt-2">
+                        {expenses.length} transaction
+                        {expenses.length !== 1 ? "s" : ""}
+                    </p>
+                </div>
+
+                {/* Category Count */}
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                    <p className="text-sm opacity-90 mb-1">Categories</p>
+                    <p className="text-4xl font-bold">{chartData.length}</p>
+                    <p className="text-sm opacity-90 mt-2">Active categories</p>
+                </div>
             </div>
 
             {/* Category Breakdown */}

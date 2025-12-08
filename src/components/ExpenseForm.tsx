@@ -59,13 +59,12 @@ export default function ExpenseForm({ expense, onClose }: ExpenseFormProps) {
     };
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="bg-white p-6 rounded-lg shadow-md"
-        >
-            <h2 className="text-2xl font-bold mb-4">
-                {expense ? "Edit Expense" : "Add New Expense"}
-            </h2>
+        <form onSubmit={handleSubmit} className="bg-white">
+            {!onClose && (
+                <h2 className="text-2xl font-bold mb-6 text-gray-900">
+                    {expense ? "Edit Expense" : "Add New Expense"}
+                </h2>
+            )}
 
             <div className="space-y-4">
                 <div>
