@@ -87,3 +87,30 @@ The frontend connects to the **C# .NET backend server** using the base URL defin
 -   `DELETE /expenses/{id}` - Delete expense
 -   `GET /expenses/filter?start=&end=` - Filter by date
 -   `GET /expenses/summary` - Get category summary
+
+## Docker
+
+The frontend runs as a container: a Node build stage compiles the static bundle,
+then Nginx serves it with SPA routing, gzip and long-lived asset caching.
+
+```bash
+docker build --build-arg VITE_API_URL=http://localhost:8080 -t expense-tracker-frontend .
+docker run -p 3000:80 expense-tracker-frontend
+```
+
+`VITE_API_URL` is baked in at build time, so pass the URL the **browser** uses to
+reach the backend. See [DOCKER_SETUP.md](DOCKER_SETUP.md) for the full breakdown.
+
+To run the frontend and backend together, use the `docker-compose.yml` in the
+repository root:
+
+```bash
+# from the repository root
+cp .env.example .env      # then fill in MONGODB_CONNECTION_STRING
+docker compose up --build
+```
+
+## Documentation
+
+-   [DEPLOYMENT.md](DEPLOYMENT.md) - deploy the frontend (Vercel or Docker)
+-   [DOCKER_SETUP.md](DOCKER_SETUP.md) - build and run the container locally
