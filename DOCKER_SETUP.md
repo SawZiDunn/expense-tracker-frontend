@@ -26,6 +26,36 @@ How the frontend is containerized and how to build/run it locally.
 > Because Vite inlines `VITE_API_URL` at build time, changing the backend URL
 > requires rebuilding the image. Pass it with `--build-arg`.
 
+## About `nginx.conf`
+
+The frontend build output is only static files (`index.html`, JS, CSS), and static
+files can't serve themselves - something has to answer HTTP requests for them. That
+is what nginx does here, and `nginx.conf` is its configuration.
+
+The backend has no equivalent file because ASP.NET Core (Kestrel) **is** the HTTP
+server, so it needs no extra server layer.
+
+`nginx.conf` replaces the image's default config (`/etc/nginx/conf.d/default.conf`)
+and adds three things:
+
+| Setting                            | Why it's there                                                                      |
+| ---------------------------------- | ----------------------------------------------------------------------------------- |
+| `try_files $uri $uri/ /index.html` | SPA history fallback - unknown paths serve `index.html` so refreshing a route won't 404 |
+| `gzip on`                          | The stock config ships gzip **commented out**; enabling it cuts the JS bundle from ~242 kB to ~79 kB |
+| `expires 1y` + `immutable`         | Vite emits content-hashed filenames, so `/assets/*` can be cached forever            |
+
+Things to know:
+
+- **The SPA fallback currently does nothing** - the app has no router yet. It's there
+  for when one is added; without it, deep links would 404 on refresh.
+- `listen 80;` is the container-side port referenced by `3000:80` in Compose.
+- The `/assets/` block assumes Vite's default `build.assetsDir`. If you change that in
+  `vite.config.ts`, update this file too.
+
+Deleting `nginx.conf` (and its `COPY` line in the `Dockerfile`) still produces a
+working app served by the default config - you would just lose gzip, caching and the
+routing fallback.
+
 ## Build the image
 
 ```bash
@@ -46,20 +76,22 @@ The app is available at http://localhost:3000
 
 ## Run with Docker Compose (recommended)
 
-From the repository root, create a `.env` file from the example and start everything:
+From the repository root:
 
 ```bash
-cp .env.example .env      # then fill in MONGODB_CONNECTION_STRING
 docker compose up --build
 ```
+
+No `.env` file is needed - Compose also starts a `mongo` container, so the stack is
+self-contained.
 
 | Service  | URL                   |
 | -------- | --------------------- |
 | Frontend | http://localhost:3000 |
 | Backend  | http://localhost:8080 |
 
-Compose reads `.env` automatically and passes `VITE_API_URL=http://localhost:8080`.
-Override it if your backend runs elsewhere:
+Compose passes `VITE_API_URL=http://localhost:8080` at build time. Override it if your
+backend runs elsewhere:
 
 ```bash
 VITE_API_URL=https://api.example.com docker compose up --build

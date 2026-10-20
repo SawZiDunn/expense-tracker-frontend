@@ -91,7 +91,9 @@ The frontend connects to the **C# .NET backend server** using the base URL defin
 ## Docker
 
 The frontend runs as a container: a Node build stage compiles the static bundle,
-then Nginx serves it with SPA routing, gzip and long-lived asset caching.
+then Nginx serves it with SPA routing, gzip and long-lived asset caching. The
+`nginx.conf` file configures that server - see
+[DOCKER_SETUP.md](DOCKER_SETUP.md#about-nginxconf) for what each rule does.
 
 ```bash
 docker build --build-arg VITE_API_URL=http://localhost:8080 -t expense-tracker-frontend .
