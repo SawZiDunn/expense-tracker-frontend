@@ -1,118 +1,124 @@
-# Expense Tracker Frontend
+# Expense Tracker - Frontend
 
-**React + Typescript + Vite + Tailwind CSS + Redux Toolkit** application for tracking expenses.
+React + TypeScript single-page app for tracking expenses: a dashboard, full CRUD and date
+filtering. It talks to the
+[expense-tracker-backend](https://github.com/SawZiDunn/expense-tracker-backend) API.
 
-## Features Overview
+## Features
 
-### Dashboard
+**Dashboard**
 
--   Total expenses display
--   Category breakdown with percentage bars
--   Real-time updates
+- Total expenses
+- Category breakdown with percentage bars
+- Updates as filters change
 
-### Expense Management
+**Expenses**
 
--   Create new expenses with amount, category, date, and note
--   Edit existing expenses
--   Delete expenses with confirmation
+- Create with amount, category, date and note
+- Edit existing expenses
+- Delete with confirmation
 
-### Filtering
+**Filtering**
 
--   Filter expenses by date range
--   Clear filters to view all expenses
--   Quick Filter buttons (Today, This Week, This Month)
--   Summary updates based on filters
+- Date range filter
+- Quick filters: Today, This Week, This Month
+- Summary recalculates for the selected range
 
-## Tech Stack
+## Tech stack
 
--   **React 18** - UI library
--   **TypeScript** - Type safety
--   **Vite** - Build tool
--   **Tailwind CSS** - Styling
--   **Redux Toolkit** - State management
--   **Axios** - HTTP client
--   **date-fns** - Date formatting
+React 18 · TypeScript · Vite · Tailwind CSS · Redux Toolkit · Axios · date-fns
 
-## Prerequisites
+## Run locally
 
--   Node.js 18+ and npm
--   Backend API (see backend repository)
+Requires Node.js 18+ and the backend running (defaults to `http://localhost:5000`).
 
-## Setup
+```bash
+npm install
+cp .env.example .env.development   # sets VITE_API_URL
+npm run dev
+```
 
-1. **Install Dependencies**
+Open http://localhost:5173.
 
-    ```bash
-    npm install
-    ```
+| Script            | Purpose                                        |
+| ----------------- | ---------------------------------------------- |
+| `npm run dev`     | Development server with hot reload             |
+| `npm run build`   | Type-check, then build static files into `dist/` |
+| `npm run preview` | Serve the production build locally             |
+| `npm run lint`    | ESLint                                         |
 
-2. **Environment Variables**
+## Environment variables
 
-    Copy the example env file:
+| Variable       | Meaning                                    |
+| -------------- | ------------------------------------------ |
+| `VITE_API_URL` | Base URL of the backend API, e.g. `http://localhost:5000` |
 
-    ```bash
-    cp .env.example .env.development
-    ```
+`VITE_API_URL` is inlined into the bundle at **build time** - it cannot be changed at
+runtime, so it must be correct before you build or deploy.
 
-    Update `.env.development` with your backend API URL:
+## Run with Docker
 
-    ```
-    VITE_API_URL=http://localhost:5000
-    ```
-
-3. **Run Development Server**
-
-    ```bash
-    npm run dev
-    ```
-
-    The app will be available at `http://localhost:5173`
-
-4. **Build for Production**
-    ```bash
-    npm run build
-    ```
-
-## Environment Variables
-
--   `VITE_API_URL` - Base URL for the backend API (e.g. `http://localhost:5000`)
-
-## API Integration
-
-The frontend connects to the **C# .NET backend server** using the base URL defined in the environment variable `VITE_API_URL` with the following endpoints:
-
--   `GET /expenses` - Fetch all expenses
--   `POST /expenses` - Create new expense
--   `PUT /expenses/{id}` - Update expense
--   `DELETE /expenses/{id}` - Delete expense
--   `GET /expenses/filter?start=&end=` - Filter by date
--   `GET /expenses/summary` - Get category summary
-
-## Docker
-
-The frontend runs as a container: a Node build stage compiles the static bundle,
-then Nginx serves it with SPA routing, gzip and long-lived asset caching. The
-`nginx.conf` file configures that server - see
-[DOCKER_SETUP.md](DOCKER_SETUP.md#about-nginxconf) for what each rule does.
+The image is a two-stage build: Node compiles the bundle, then nginx serves the static
+files.
 
 ```bash
 docker build --build-arg VITE_API_URL=http://localhost:8080 -t expense-tracker-frontend .
 docker run -p 3000:80 expense-tracker-frontend
 ```
 
-`VITE_API_URL` is baked in at build time, so pass the URL the **browser** uses to
-reach the backend. See [DOCKER_SETUP.md](DOCKER_SETUP.md) for the full breakdown.
+Open http://localhost:3000. `nginx.conf` handles the SPA fallback (so `/expenses` serves
+`index.html` instead of 404 on refresh), gzip compression and long-lived caching for
+hashed assets.
 
-To run the frontend and backend together, use the `docker-compose.yml` in the
-repository root:
+### What `nginx.conf` does
+
+The file is copied to `/etc/nginx/conf.d/default.conf` in the image. Three rules matter:
+
+| Rule                                   | Why it is there                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------- |
+| `try_files $uri $uri/ /index.html`     | Deep links and refreshes hit the React router, so unknown paths must return `index.html` rather than a 404 |
+| `location /assets/` + `expires 1y`     | Vite puts a content hash in every filename, so those files can be cached forever   |
+| `gzip`                                 | Smaller JavaScript and CSS payloads                                                |
+
+The `=404` inside `location /assets/` is deliberate: a missing asset must fail as a 404
+instead of falling back to HTML, otherwise the browser gets HTML where it expects
+JavaScript and reports a MIME type error.
+
+## Run the full stack (frontend + backend + MongoDB)
+
+The backend and a local MongoDB are wired together in the deployment repository:
+<https://github.com/SawZiDunn/expense-tracker-deployment>
 
 ```bash
-# from the repository root
-cp .env.example .env      # then fill in MONGODB_CONNECTION_STRING
-docker compose up --build
+git clone https://github.com/SawZiDunn/expense-tracker-deployment
+cd expense-tracker-deployment
+docker compose up -d
 ```
 
-## Documentation
+That pulls published images for both services and starts MongoDB with persistent storage -
+no `.env` file and no MongoDB Atlas account needed. Frontend on http://localhost:3000,
+API on http://localhost:8080.
 
--   [DEPLOYMENT.md](DEPLOYMENT.md) - deploy the frontend (Vercel or Docker)
--   [DOCKER_SETUP.md](DOCKER_SETUP.md) - build and run the container locally
+To build the images from this source instead of pulling them:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+```
+
+## Deploy
+
+`dist/` is fully static, so it can be hosted anywhere.
+
+**Vercel** - import the repository, choose the Vite preset, build command `npm run build`,
+output directory `dist`, and set `VITE_API_URL` to your deployed backend URL. Afterwards set
+the backend's `FRONTEND_URL` (or `CORS_ORIGINS`) to the Vercel URL, otherwise the browser
+requests fail CORS.
+
+**Docker** - push the image built above to any container host (Render, Fly.io, Railway, a
+VPS).
+
+## Notes
+
+- Never put secrets in `VITE_*` variables - they are embedded in the public bundle.
+- Do not add a trailing slash to `VITE_API_URL`.
+- The backend repository has its own docs for running and deploying the API.

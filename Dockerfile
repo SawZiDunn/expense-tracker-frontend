@@ -8,7 +8,7 @@ WORKDIR /app
 ARG VITE_API_URL=http://localhost:5000
 ENV VITE_API_URL=$VITE_API_URL
 
-# Install dependencies (kept as its own layer so it caches well)
+# Install dependencies
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -19,7 +19,7 @@ RUN npm run build
 # ---------- Runtime stage ----------
 FROM nginx:1.27-alpine AS runtime
 
-# SPA-friendly nginx config (history fallback, gzip, asset caching)
+# SPA-friendly nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Serve the compiled assets
